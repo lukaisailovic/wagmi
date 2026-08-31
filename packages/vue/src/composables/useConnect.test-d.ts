@@ -2,10 +2,11 @@ import type {
   ConnectErrorType,
   Connector,
   CreateConnectorFn,
+  MutationFunctionContext,
 } from '@wagmi/core'
 import { config } from '@wagmi/test'
-import type { Address } from 'viem'
-import { expectTypeOf, test } from 'vitest'
+import type { Address, Hex } from 'viem'
+import { assertType, expectTypeOf, test } from 'vitest'
 
 import { useConnect } from './useConnect.js'
 
@@ -13,94 +14,138 @@ const connector = config.connectors[0]!
 const contextValue = { foo: 'bar' } as const
 
 test('context', () => {
-  const { connect, context, data, error, variables } = useConnect({
+  const connect = useConnect({
     mutation: {
-      onMutate(variables) {
-        expectTypeOf(variables).toEqualTypeOf<{
+      onMutate(variables, mutationContext) {
+        assertType<{
           chainId?: number | undefined
           connector: Connector | CreateConnectorFn
-        }>()
+          withCapabilities?: boolean | undefined
+        }>(variables)
+        expectTypeOf(mutationContext).toEqualTypeOf<MutationFunctionContext>()
         return contextValue
       },
-      onError(error, variables, context) {
-        expectTypeOf(variables).toEqualTypeOf<{
+      onError(error, variables, context, mutationContext) {
+        assertType<{
           chainId?: number | undefined
           connector: Connector | CreateConnectorFn
-        }>()
+          withCapabilities?: boolean | undefined
+        }>(variables)
         expectTypeOf(error).toEqualTypeOf<ConnectErrorType>()
         expectTypeOf(context).toEqualTypeOf<typeof contextValue | undefined>()
+        expectTypeOf(mutationContext).toEqualTypeOf<MutationFunctionContext>()
       },
-      onSuccess(data, variables, context) {
-        expectTypeOf(variables).toEqualTypeOf<{
+      onSuccess(data, variables, context, mutationContext) {
+        assertType<{
           chainId?: number | undefined
           connector: Connector | CreateConnectorFn
-        }>()
+          withCapabilities?: boolean | undefined
+        }>(variables)
         expectTypeOf(data).toEqualTypeOf<{
-          accounts: readonly [Address, ...Address[]]
+          accounts:
+            | readonly [Address, ...Address[]]
+            | readonly [
+                { address: Address; capabilities: Record<string, unknown> },
+                ...{
+                  address: Address
+                  capabilities: Record<string, unknown>
+                }[],
+              ]
+
           chainId: number
         }>()
         expectTypeOf(context).toEqualTypeOf<typeof contextValue>()
+        expectTypeOf(mutationContext).toEqualTypeOf<MutationFunctionContext>()
       },
-      onSettled(data, error, variables, context) {
+      onSettled(data, error, variables, context, mutationContext) {
         expectTypeOf(data).toEqualTypeOf<
           | {
-              accounts: readonly [Address, ...Address[]]
+              accounts:
+                | readonly [Address, ...Address[]]
+                | readonly [
+                    {
+                      address: Address
+                      capabilities: Record<string, unknown>
+                    },
+                    ...{
+                      address: Address
+                      capabilities: Record<string, unknown>
+                    }[],
+                  ]
+
               chainId: number
             }
           | undefined
         >()
         expectTypeOf(error).toEqualTypeOf<ConnectErrorType | null>()
-        expectTypeOf(variables).toEqualTypeOf<{
+        assertType<{
           chainId?: number | undefined
           connector: Connector | CreateConnectorFn
-        }>()
+          withCapabilities?: boolean | undefined
+        }>(variables)
         expectTypeOf(context).toEqualTypeOf<typeof contextValue | undefined>()
+        expectTypeOf(mutationContext).toEqualTypeOf<MutationFunctionContext>()
       },
     },
   })
 
-  expectTypeOf(data.value).toEqualTypeOf<
+  expectTypeOf(connect.data.value).toEqualTypeOf<
     | {
-        accounts: readonly [Address, ...Address[]]
+        accounts:
+          | readonly [Address, ...Address[]]
+          | readonly [
+              { address: Address; capabilities: Record<string, unknown> },
+              ...{
+                address: Address
+                capabilities: Record<string, unknown>
+              }[],
+            ]
+
         chainId: number
       }
     | undefined
   >()
-  expectTypeOf(error.value).toEqualTypeOf<ConnectErrorType | null>()
-  expectTypeOf(variables.value).toMatchTypeOf<
+  expectTypeOf(connect.error.value).toEqualTypeOf<ConnectErrorType | null>()
+  expectTypeOf(connect.variables.value).toMatchTypeOf<
     | {
         chainId?: number | undefined
         connector: Connector | CreateConnectorFn
       }
     | undefined
   >()
-  expectTypeOf(context.value).toEqualTypeOf<typeof contextValue | undefined>()
+  expectTypeOf(connect.context.value).toEqualTypeOf<
+    typeof contextValue | undefined
+  >()
 
-  connect(
+  connect.mutate(
     { connector },
     {
-      onError(error, variables, context) {
+      onError(error, variables, context, mutationContext) {
         expectTypeOf(variables).toEqualTypeOf<{
           chainId?: number | undefined
           connector: typeof connector | CreateConnectorFn
           foo?: string | undefined
+          withCapabilities?: boolean | undefined
         }>()
         expectTypeOf(error).toEqualTypeOf<ConnectErrorType>()
         expectTypeOf(context).toEqualTypeOf<typeof contextValue | undefined>()
+        expectTypeOf(mutationContext).toEqualTypeOf<MutationFunctionContext>()
       },
-      onSuccess(data, variables, context) {
+      onSuccess(data, variables, context, mutationContext) {
         expectTypeOf(variables).toEqualTypeOf<{
           chainId?: number | undefined
           connector: typeof connector | CreateConnectorFn
           foo?: string | undefined
+          withCapabilities?: boolean | undefined
         }>()
         expectTypeOf(data).toEqualTypeOf<{
           accounts: readonly [Address, ...Address[]]
           chainId: number
         }>()
-        expectTypeOf(context).toEqualTypeOf<typeof contextValue>()
+        expectTypeOf(context).toEqualTypeOf<typeof contextValue | undefined>()
+        expectTypeOf(mutationContext).toEqualTypeOf<MutationFunctionContext>()
       },
-      onSettled(data, error, variables, context) {
+      onSettled(data, error, variables, context, mutationContext) {
         expectTypeOf(data).toEqualTypeOf<
           | {
               accounts: readonly [Address, ...Address[]]
@@ -113,9 +158,87 @@ test('context', () => {
           chainId?: number | undefined
           connector: typeof connector | CreateConnectorFn
           foo?: string | undefined
+          withCapabilities?: boolean | undefined
         }>()
         expectTypeOf(context).toEqualTypeOf<typeof contextValue | undefined>()
+        expectTypeOf(mutationContext).toEqualTypeOf<MutationFunctionContext>()
       },
     },
   )
+
+  connect.mutate(
+    {
+      connector,
+      foo: 'bar',
+      withCapabilities: true,
+    },
+    {
+      onSuccess(data, _variables, _context, _mutationContext) {
+        expectTypeOf(data).toEqualTypeOf<{
+          accounts: readonly [
+            {
+              address: Address
+              capabilities: {
+                foo: { bar: Hex }
+              }
+            },
+            ...{
+              address: Address
+              capabilities: {
+                foo: { bar: Hex }
+              }
+            }[],
+          ]
+          chainId: number
+        }>()
+      },
+      onSettled(data, _error, _variables, _context, _mutationContext) {
+        expectTypeOf(data).toEqualTypeOf<
+          | {
+              accounts: readonly [
+                {
+                  address: Address
+                  capabilities: {
+                    foo: { bar: Hex }
+                  }
+                },
+                ...{
+                  address: Address
+                  capabilities: {
+                    foo: { bar: Hex }
+                  }
+                }[],
+              ]
+              chainId: number
+            }
+          | undefined
+        >()
+      },
+    },
+  )
+
+  ;(async () => {
+    const res = await connect.mutateAsync({
+      connector,
+      foo: 'bar',
+      withCapabilities: true,
+    })
+    expectTypeOf(res).toEqualTypeOf<{
+      accounts: readonly [
+        {
+          address: Address
+          capabilities: {
+            foo: { bar: Hex }
+          }
+        },
+        ...{
+          address: Address
+          capabilities: {
+            foo: { bar: Hex }
+          }
+        }[],
+      ]
+      chainId: number
+    }>()
+  })()
 })

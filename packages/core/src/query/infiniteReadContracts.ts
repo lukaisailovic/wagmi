@@ -61,7 +61,6 @@ export function infiniteReadContractsQueryOptions<
     InfiniteReadContractsQueryFnData<contracts, allowFailure>,
     ReadContractsErrorType,
     InfiniteReadContractsData<contracts, allowFailure>,
-    InfiniteReadContractsData<contracts, allowFailure>,
     InfiniteReadContractsQueryKey<contracts, allowFailure, pageParam, config>,
     pageParam
   >
@@ -108,7 +107,7 @@ export function infiniteReadContractsQueryKey<
     ChainIdParameter<config> &
     RequiredPageParamsParameters<contracts, allowFailure, pageParam>,
 ) {
-  const { contracts: _, query: _q, ...parameters } = options
+  const { contracts: _, ...parameters } = options
   return ['infiniteReadContracts', filterQueryOptions(parameters)] as const
 }
 

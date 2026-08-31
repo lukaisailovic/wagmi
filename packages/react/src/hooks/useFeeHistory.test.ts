@@ -1,18 +1,25 @@
-import { chain, wait } from '@wagmi/test'
-import { renderHook, waitFor } from '@wagmi/test/react'
-import { expect, test } from 'vitest'
+import { chain, testClient, wait } from '@wagmi/test'
+import { renderHook } from '@wagmi/test/react'
+import { beforeAll, expect, test, vi } from 'vitest'
 
 import { useFeeHistory } from './useFeeHistory.js'
 
+beforeAll(async () => {
+  await Promise.all([
+    testClient.mainnet.mine({ blocks: 4 }),
+    testClient.mainnet2.mine({ blocks: 4 }),
+  ])
+})
+
 test('default', async () => {
-  const { result } = renderHook(() =>
+  const { result } = await renderHook(() =>
     useFeeHistory({
       blockCount: 4,
       rewardPercentiles: [25, 75],
     }),
   )
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   const { data, ...rest } = result.current
   expect(data).toMatchObject({
@@ -30,6 +37,7 @@ test('default', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -44,6 +52,10 @@ test('default', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "feeHistory",
         {
@@ -62,7 +74,7 @@ test('default', async () => {
 })
 
 test('parameters: chainId', async () => {
-  const { result } = renderHook(() =>
+  const { result } = await renderHook(() =>
     useFeeHistory({
       blockCount: 4,
       rewardPercentiles: [25, 75],
@@ -70,7 +82,7 @@ test('parameters: chainId', async () => {
     }),
   )
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   const { data, ...rest } = result.current
   expect(data).toMatchObject({
@@ -88,6 +100,7 @@ test('parameters: chainId', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -102,6 +115,10 @@ test('parameters: chainId', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "feeHistory",
         {
@@ -120,15 +137,15 @@ test('parameters: chainId', async () => {
 })
 
 test('parameters: blockNumber', async () => {
-  const { result } = renderHook(() =>
+  const { result } = await renderHook(() =>
     useFeeHistory({
       blockCount: 4,
       rewardPercentiles: [25, 75],
-      blockNumber: 18677379n,
+      blockNumber: chain.mainnet.fork.blockNumber + 4n,
     }),
   )
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   const { data, ...rest } = result.current
   expect(data).toMatchObject({
@@ -146,6 +163,7 @@ test('parameters: blockNumber', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -160,11 +178,15 @@ test('parameters: blockNumber', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "feeHistory",
         {
           "blockCount": 4,
-          "blockNumber": 18677379n,
+          "blockNumber": 23535884n,
           "chainId": 1,
           "rewardPercentiles": [
             25,
@@ -179,15 +201,15 @@ test('parameters: blockNumber', async () => {
 })
 
 test('parameters: blockTag', async () => {
-  const { result } = renderHook(() =>
+  const { result } = await renderHook(() =>
     useFeeHistory({
       blockCount: 4,
       rewardPercentiles: [25, 75],
-      blockTag: 'safe',
+      blockTag: 'latest',
     }),
   )
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   const { data, ...rest } = result.current
   expect(data).toMatchObject({
@@ -205,6 +227,7 @@ test('parameters: blockTag', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -219,11 +242,15 @@ test('parameters: blockTag', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "feeHistory",
         {
           "blockCount": 4,
-          "blockTag": "safe",
+          "blockTag": "latest",
           "chainId": 1,
           "rewardPercentiles": [
             25,
@@ -238,13 +265,13 @@ test('parameters: blockTag', async () => {
 })
 
 test('behavior: blockCount: undefined -> defined', async () => {
-  let blockCount: number | undefined = undefined
-
-  const { result, rerender } = renderHook(() =>
-    useFeeHistory({
-      blockCount,
-      rewardPercentiles: [25, 75],
-    }),
+  const { result, rerender } = await renderHook(
+    (props) =>
+      useFeeHistory({
+        blockCount: props?.blockCount,
+        rewardPercentiles: [25, 75],
+      }),
+    { initialProps: { blockCount: undefined as number | undefined } },
   )
 
   {
@@ -259,6 +286,7 @@ test('behavior: blockCount: undefined -> defined', async () => {
         "failureCount": 0,
         "failureReason": null,
         "fetchStatus": "idle",
+        "isEnabled": false,
         "isError": false,
         "isFetched": false,
         "isFetchedAfterMount": false,
@@ -273,6 +301,10 @@ test('behavior: blockCount: undefined -> defined', async () => {
         "isRefetching": false,
         "isStale": false,
         "isSuccess": false,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
         "queryKey": [
           "feeHistory",
           {
@@ -290,10 +322,9 @@ test('behavior: blockCount: undefined -> defined', async () => {
     `)
   }
 
-  blockCount = 4
-  rerender()
+  rerender({ blockCount: 4 })
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   const { data, ...rest } = result.current
   expect(data).toMatchObject({
@@ -311,6 +342,7 @@ test('behavior: blockCount: undefined -> defined', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -325,6 +357,10 @@ test('behavior: blockCount: undefined -> defined', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "feeHistory",
         {
@@ -343,13 +379,13 @@ test('behavior: blockCount: undefined -> defined', async () => {
 })
 
 test('behavior: rewardPercentiles: undefined -> defined', async () => {
-  let rewardPercentiles: number[] | undefined = undefined
-
-  const { result, rerender } = renderHook(() =>
-    useFeeHistory({
-      blockCount: 4,
-      rewardPercentiles,
-    }),
+  const { result, rerender } = await renderHook(
+    (props) =>
+      useFeeHistory({
+        blockCount: 4,
+        rewardPercentiles: props?.rewardPercentiles,
+      }),
+    { initialProps: { rewardPercentiles: undefined as number[] | undefined } },
   )
 
   {
@@ -364,6 +400,7 @@ test('behavior: rewardPercentiles: undefined -> defined', async () => {
         "failureCount": 0,
         "failureReason": null,
         "fetchStatus": "idle",
+        "isEnabled": false,
         "isError": false,
         "isFetched": false,
         "isFetchedAfterMount": false,
@@ -378,6 +415,10 @@ test('behavior: rewardPercentiles: undefined -> defined', async () => {
         "isRefetching": false,
         "isStale": false,
         "isSuccess": false,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
         "queryKey": [
           "feeHistory",
           {
@@ -392,10 +433,9 @@ test('behavior: rewardPercentiles: undefined -> defined', async () => {
     `)
   }
 
-  rewardPercentiles = [25, 75]
-  rerender()
+  rerender({ rewardPercentiles: [25, 75] })
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   const { data, ...rest } = result.current
   expect(data).toMatchObject({
@@ -413,6 +453,7 @@ test('behavior: rewardPercentiles: undefined -> defined', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -427,6 +468,10 @@ test('behavior: rewardPercentiles: undefined -> defined', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "feeHistory",
         {
@@ -445,8 +490,8 @@ test('behavior: rewardPercentiles: undefined -> defined', async () => {
 })
 
 test('behavior: disabled when properties missing', async () => {
-  const { result } = renderHook(() => useFeeHistory())
+  const { result } = await renderHook(() => useFeeHistory())
 
   await wait(100)
-  await waitFor(() => expect(result.current.isPending).toBeTruthy())
+  await vi.waitFor(() => expect(result.current.isPending).toBeTruthy())
 })

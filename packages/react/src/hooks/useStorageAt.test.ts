@@ -1,19 +1,18 @@
 import { address, chain, wait } from '@wagmi/test'
-import { renderHook, waitFor } from '@wagmi/test/react'
-import { expect, test } from 'vitest'
-
+import { renderHook } from '@wagmi/test/react'
 import type { Address } from 'viem'
+import { expect, test, vi } from 'vitest'
 import { useStorageAt } from './useStorageAt.js'
 
 test('default', async () => {
-  const { result } = renderHook(() =>
+  const { result } = await renderHook(() =>
     useStorageAt({
       address: address.wagmiMintExample,
       slot: '0x0',
     }),
   )
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   expect(result.current).toMatchInlineSnapshot(`
     {
@@ -25,6 +24,7 @@ test('default', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -39,6 +39,10 @@ test('default', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "getStorageAt",
         {
@@ -54,7 +58,7 @@ test('default', async () => {
 })
 
 test('parameters: blockNumber', async () => {
-  const { result } = renderHook(() =>
+  const { result } = await renderHook(() =>
     useStorageAt({
       address: address.wagmiMintExample,
       blockNumber: 16280770n,
@@ -62,7 +66,7 @@ test('parameters: blockNumber', async () => {
     }),
   )
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   expect(result.current).toMatchInlineSnapshot(`
     {
@@ -74,6 +78,7 @@ test('parameters: blockNumber', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -88,6 +93,10 @@ test('parameters: blockNumber', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "getStorageAt",
         {
@@ -104,7 +113,7 @@ test('parameters: blockNumber', async () => {
 })
 
 test('parameters: blockTag', async () => {
-  const { result } = renderHook(() =>
+  const { result } = await renderHook(() =>
     useStorageAt({
       address: address.wagmiMintExample,
       blockTag: 'safe',
@@ -112,7 +121,7 @@ test('parameters: blockTag', async () => {
     }),
   )
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   expect(result.current).toMatchInlineSnapshot(`
     {
@@ -124,6 +133,7 @@ test('parameters: blockTag', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -138,6 +148,10 @@ test('parameters: blockTag', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "getStorageAt",
         {
@@ -154,7 +168,7 @@ test('parameters: blockTag', async () => {
 })
 
 test('parameters: chainId', async () => {
-  const { result } = renderHook(() =>
+  const { result } = await renderHook(() =>
     useStorageAt({
       address: address.wagmiMintExample,
       chainId: chain.optimism.id,
@@ -162,7 +176,7 @@ test('parameters: chainId', async () => {
     }),
   )
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   expect(result.current).toMatchInlineSnapshot(`
     {
@@ -174,6 +188,7 @@ test('parameters: chainId', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -188,6 +203,10 @@ test('parameters: chainId', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "getStorageAt",
         {
@@ -203,13 +222,13 @@ test('parameters: chainId', async () => {
 })
 
 test('behavior: address: undefined -> defined', async () => {
-  let contractAddress: Address | undefined = undefined
-
-  const { result, rerender } = renderHook(() =>
-    useStorageAt({
-      address: contractAddress,
-      slot: '0x0',
-    }),
+  const { result, rerender } = await renderHook(
+    (props) =>
+      useStorageAt({
+        address: props?.address,
+        slot: '0x0',
+      }),
+    { initialProps: { address: undefined as Address | undefined } },
   )
 
   expect(result.current).toMatchInlineSnapshot(`
@@ -222,6 +241,7 @@ test('behavior: address: undefined -> defined', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": false,
       "isError": false,
       "isFetched": false,
       "isFetchedAfterMount": false,
@@ -236,6 +256,10 @@ test('behavior: address: undefined -> defined', async () => {
       "isRefetching": false,
       "isStale": false,
       "isSuccess": false,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "getStorageAt",
         {
@@ -249,10 +273,9 @@ test('behavior: address: undefined -> defined', async () => {
     }
   `)
 
-  contractAddress = address.wagmiMintExample
-  rerender()
+  rerender({ address: address.wagmiMintExample })
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
   expect(result.current).toMatchInlineSnapshot(`
     {
       "data": "0x7761676d6900000000000000000000000000000000000000000000000000000a",
@@ -263,6 +286,7 @@ test('behavior: address: undefined -> defined', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -277,6 +301,10 @@ test('behavior: address: undefined -> defined', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "getStorageAt",
         {
@@ -292,8 +320,8 @@ test('behavior: address: undefined -> defined', async () => {
 })
 
 test('behavior: disabled when properties missing', async () => {
-  const { result } = renderHook(() => useStorageAt())
+  const { result } = await renderHook(() => useStorageAt())
 
   await wait(100)
-  await waitFor(() => expect(result.current.isPending).toBeTruthy())
+  await vi.waitFor(() => expect(result.current.isPending).toBeTruthy())
 })

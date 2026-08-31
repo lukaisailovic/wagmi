@@ -1,19 +1,18 @@
-import { config, wait } from '@wagmi/test'
-import { renderHook, waitFor } from '@wagmi/test/react'
-import type { Hash } from 'viem'
-import { expect, test } from 'vitest'
-
 import { getTransactionReceipt } from '@wagmi/core'
+import { config, wait } from '@wagmi/test'
+import { renderHook } from '@wagmi/test/react'
+import type { Hash } from 'viem'
+import { expect, test, vi } from 'vitest'
 import { useTransactionConfirmations } from './useTransactionConfirmations.js'
 
 test('default', async () => {
-  const { result } = renderHook(() =>
+  const { result } = await renderHook(() =>
     useTransactionConfirmations({
       hash: '0x60668ed8c2dc110d61d945a936fcd45b8f13654e5c78481c8c825d1148c7ef30',
     }),
   )
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   const { data, ...rest } = result.current
   expect(data).toBeTypeOf('bigint')
@@ -26,6 +25,7 @@ test('default', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -40,6 +40,10 @@ test('default', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "transactionConfirmations",
         {
@@ -58,13 +62,13 @@ test('parameters: transactionReceipt', async () => {
     hash: '0x60668ed8c2dc110d61d945a936fcd45b8f13654e5c78481c8c825d1148c7ef30',
   })
 
-  const { result } = renderHook(() =>
+  const { result } = await renderHook(() =>
     useTransactionConfirmations({
       transactionReceipt,
     }),
   )
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   const { data, ...rest } = result.current
   expect(data).toBeTypeOf('bigint')
@@ -77,6 +81,7 @@ test('parameters: transactionReceipt', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -91,6 +96,10 @@ test('parameters: transactionReceipt', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "transactionConfirmations",
         {
@@ -120,12 +129,12 @@ test('parameters: transactionReceipt', async () => {
 })
 
 test('behavior: hash: undefined -> defined', async () => {
-  let hash: Hash | undefined = undefined
-
-  const { result, rerender } = renderHook(() =>
-    useTransactionConfirmations({
-      hash,
-    }),
+  const { result, rerender } = await renderHook(
+    (props) =>
+      useTransactionConfirmations({
+        hash: props?.hash,
+      }),
+    { initialProps: { hash: undefined as Hash | undefined } },
   )
 
   expect(result.current).toMatchInlineSnapshot(`
@@ -138,6 +147,7 @@ test('behavior: hash: undefined -> defined', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": false,
       "isError": false,
       "isFetched": false,
       "isFetchedAfterMount": false,
@@ -152,6 +162,10 @@ test('behavior: hash: undefined -> defined', async () => {
       "isRefetching": false,
       "isStale": false,
       "isSuccess": false,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "transactionConfirmations",
         {
@@ -164,10 +178,11 @@ test('behavior: hash: undefined -> defined', async () => {
     }
   `)
 
-  hash = '0x60668ed8c2dc110d61d945a936fcd45b8f13654e5c78481c8c825d1148c7ef30'
-  rerender()
+  rerender({
+    hash: '0x60668ed8c2dc110d61d945a936fcd45b8f13654e5c78481c8c825d1148c7ef30',
+  })
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   const { data, ...rest } = result.current
   expect(data).toBeTypeOf('bigint')
@@ -180,6 +195,7 @@ test('behavior: hash: undefined -> defined', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -194,6 +210,10 @@ test('behavior: hash: undefined -> defined', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "transactionConfirmations",
         {
@@ -208,8 +228,8 @@ test('behavior: hash: undefined -> defined', async () => {
 })
 
 test('behavior: disabled when properties missing', async () => {
-  const { result } = renderHook(() => useTransactionConfirmations())
+  const { result } = await renderHook(() => useTransactionConfirmations())
 
   await wait(100)
-  await waitFor(() => expect(result.current.isPending).toBeTruthy())
+  await vi.waitFor(() => expect(result.current.isPending).toBeTruthy())
 })

@@ -16,12 +16,17 @@ import type {
   ChainIdParameter,
   ConnectorParameter,
 } from '../types/properties.js'
-import type { Compute } from '../types/utils.js'
+import type { UnionCompute, UnionLooseOmit } from '../types/utils.js'
 import { getAction } from '../utils/getAction.js'
 import {
   type GetConnectorClientErrorType,
   getConnectorClient,
 } from './getConnectorClient.js'
+
+type SendTransactionOverrides = ConnectorParameter & {
+  /** Gas provided for transaction execution. */
+  gas?: TransactionRequest['gas'] | null
+}
 
 export type SendTransactionParameters<
   config extends Config = Config,
@@ -30,18 +35,15 @@ export type SendTransactionParameters<
   ///
   chains extends readonly Chain[] = SelectChains<config, chainId>,
 > = {
-  [key in keyof chains]: Compute<
-    Omit<
+  [key in keyof chains]: UnionCompute<
+    UnionLooseOmit<
       viem_SendTransactionParameters<chains[key], Account, chains[key]>,
       'chain' | 'gas'
     > &
       ChainIdParameter<config, chainId> &
-      ConnectorParameter
+      SendTransactionOverrides
   >
-}[number] & {
-  /** Gas provided for transaction execution. */
-  gas?: TransactionRequest['gas'] | null
-}
+}[number]
 
 export type SendTransactionReturnType = viem_SendTransactionReturnType
 
@@ -70,15 +72,22 @@ export async function sendTransaction<
   else
     client = await getConnectorClient(config, {
       account: account ?? undefined,
+      assertChainId: false,
       chainId,
       connector,
     })
+
+  const chain = (() => {
+    if (!chainId || client.chain?.id === chainId) return client.chain
+    return { id: chainId }
+  })()
 
   const action = getAction(client, viem_sendTransaction, 'sendTransaction')
   const hash = await action({
     ...(rest as any),
     ...(account ? { account } : {}),
-    chain: chainId ? { id: chainId } : null,
+    assertChainId: !!chainId,
+    chain,
     gas: rest.gas ?? undefined,
   })
 

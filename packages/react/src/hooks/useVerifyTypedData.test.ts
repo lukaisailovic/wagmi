@@ -1,7 +1,7 @@
 import { typedData, wait } from '@wagmi/test'
-import { renderHook, waitFor } from '@wagmi/test/react'
+import { renderHook } from '@wagmi/test/react'
 import type { Hex } from 'viem'
-import { expect, test } from 'vitest'
+import { expect, test, vi } from 'vitest'
 
 import { useVerifyTypedData } from './useVerifyTypedData.js'
 
@@ -9,7 +9,7 @@ const smartAccountAddress = '0x3FCf42e10CC70Fe75A62EB3aDD6D305Aa840d145'
 const notDeployedAddress = '0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef'
 
 test('valid signature', async () => {
-  const { result } = renderHook(() =>
+  const { result } = await renderHook(() =>
     useVerifyTypedData({
       ...typedData.basic,
       primaryType: 'Mail',
@@ -19,7 +19,7 @@ test('valid signature', async () => {
     }),
   )
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   expect(result.current).toMatchInlineSnapshot(`
     {
@@ -31,6 +31,7 @@ test('valid signature', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -45,6 +46,10 @@ test('valid signature', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "verifyTypedData",
         {
@@ -104,7 +109,7 @@ test('valid signature', async () => {
 })
 
 test('invalid signature', async () => {
-  const { result } = renderHook(() =>
+  const { result } = await renderHook(() =>
     useVerifyTypedData({
       ...typedData.basic,
       primaryType: 'Mail',
@@ -113,7 +118,7 @@ test('invalid signature', async () => {
     }),
   )
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   expect(result.current).toMatchInlineSnapshot(`
     {
@@ -125,6 +130,7 @@ test('invalid signature', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -139,6 +145,10 @@ test('invalid signature', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "verifyTypedData",
         {
@@ -198,7 +208,7 @@ test('invalid signature', async () => {
 })
 
 test('account not deployed', async () => {
-  const { result } = renderHook(() =>
+  const { result } = await renderHook(() =>
     useVerifyTypedData({
       ...typedData.basic,
       primaryType: 'Mail',
@@ -208,7 +218,7 @@ test('account not deployed', async () => {
     }),
   )
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   expect(result.current).toMatchInlineSnapshot(`
     {
@@ -220,6 +230,7 @@ test('account not deployed', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -234,6 +245,10 @@ test('account not deployed', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "verifyTypedData",
         {
@@ -293,15 +308,15 @@ test('account not deployed', async () => {
 })
 
 test('behavior: signature: undefined -> defined', async () => {
-  let signature: Hex | undefined = undefined
-
-  const { result, rerender } = renderHook(() =>
-    useVerifyTypedData({
-      ...typedData.basic,
-      primaryType: 'Mail',
-      address: smartAccountAddress,
-      signature,
-    }),
+  const { result, rerender } = await renderHook(
+    (props) =>
+      useVerifyTypedData({
+        ...typedData.basic,
+        primaryType: 'Mail',
+        address: smartAccountAddress,
+        signature: props?.signature,
+      }),
+    { initialProps: { signature: undefined as Hex | undefined } },
   )
 
   expect(result.current).toMatchInlineSnapshot(`
@@ -314,6 +329,7 @@ test('behavior: signature: undefined -> defined', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": false,
       "isError": false,
       "isFetched": false,
       "isFetchedAfterMount": false,
@@ -328,6 +344,10 @@ test('behavior: signature: undefined -> defined', async () => {
       "isRefetching": false,
       "isStale": false,
       "isSuccess": false,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "verifyTypedData",
         {
@@ -385,11 +405,12 @@ test('behavior: signature: undefined -> defined', async () => {
     }
   `)
 
-  signature =
-    '0x79d756d805073dc97b7bc885b0d56ddf319a2599530fe1e178c2a7de5be88980068d24f20a79b318ea0a84d33ae06f93db77e4235e5d9eeb8b1d7a63922ada3e1c'
-  rerender()
+  rerender({
+    signature:
+      '0x79d756d805073dc97b7bc885b0d56ddf319a2599530fe1e178c2a7de5be88980068d24f20a79b318ea0a84d33ae06f93db77e4235e5d9eeb8b1d7a63922ada3e1c',
+  })
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   expect(result.current).toMatchInlineSnapshot(`
     {
@@ -401,6 +422,7 @@ test('behavior: signature: undefined -> defined', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -415,6 +437,10 @@ test('behavior: signature: undefined -> defined', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "verifyTypedData",
         {
@@ -474,8 +500,8 @@ test('behavior: signature: undefined -> defined', async () => {
 })
 
 test('behavior: disabled when properties missing', async () => {
-  const { result } = renderHook(() => useVerifyTypedData())
+  const { result } = await renderHook(() => useVerifyTypedData())
 
   await wait(100)
-  await waitFor(() => expect(result.current.isPending).toBeTruthy())
+  await vi.waitFor(() => expect(result.current.isPending).toBeTruthy())
 })

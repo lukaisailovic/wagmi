@@ -1,13 +1,13 @@
 import { chain } from '@wagmi/test'
-import { renderHook, waitFor } from '@wagmi/test/react'
-import { expect, test } from 'vitest'
+import { renderHook } from '@wagmi/test/react'
+import { expect, test, vi } from 'vitest'
 
 import { useBlockTransactionCount } from './useBlockTransactionCount.js'
 
 test('default', async () => {
-  const { result } = renderHook(() => useBlockTransactionCount({}))
+  const { result } = await renderHook(() => useBlockTransactionCount({}))
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   const { data, ...rest } = result.current
   expect(data).toBeTypeOf('number')
@@ -20,6 +20,7 @@ test('default', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -34,6 +35,10 @@ test('default', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "blockTransactionCount",
         {
@@ -47,11 +52,11 @@ test('default', async () => {
 })
 
 test('parameters: chainId', async () => {
-  const { result } = renderHook(() =>
+  const { result } = await renderHook(() =>
     useBlockTransactionCount({ chainId: chain.mainnet2.id }),
   )
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   const { data, ...rest } = result.current
   expect(data).toBeTypeOf('number')
@@ -64,6 +69,7 @@ test('parameters: chainId', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -78,6 +84,10 @@ test('parameters: chainId', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "blockTransactionCount",
         {
@@ -91,11 +101,11 @@ test('parameters: chainId', async () => {
 })
 
 test('parameters: blockNumber', async () => {
-  const { result } = renderHook(() =>
+  const { result } = await renderHook(() =>
     useBlockTransactionCount({ blockNumber: 13677382n }),
   )
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   const { data, ...rest } = result.current
   expect(data).toBeTypeOf('number')
@@ -108,6 +118,7 @@ test('parameters: blockNumber', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -122,6 +133,10 @@ test('parameters: blockNumber', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "blockTransactionCount",
         {
@@ -136,14 +151,14 @@ test('parameters: blockNumber', async () => {
 })
 
 test('parameters: blockHash', async () => {
-  const { result } = renderHook(() =>
+  const { result } = await renderHook(() =>
     useBlockTransactionCount({
       blockHash:
         '0x6201f37a245850d1f11e4be3ac45bc51bd9d43ee4a127192cad550f351cfa575',
     }),
   )
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   const { data, ...rest } = result.current
   expect(data).toBeTypeOf('number')
@@ -156,6 +171,7 @@ test('parameters: blockHash', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -170,6 +186,10 @@ test('parameters: blockHash', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "blockTransactionCount",
         {
@@ -184,13 +204,13 @@ test('parameters: blockHash', async () => {
 })
 
 test('parameters: blockTag', async () => {
-  const { result } = renderHook(() =>
+  const { result } = await renderHook(() =>
     useBlockTransactionCount({
       blockTag: 'safe',
     }),
   )
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   const { data, ...rest } = result.current
   expect(data).toBeTypeOf('number')
@@ -203,6 +223,7 @@ test('parameters: blockTag', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -217,6 +238,10 @@ test('parameters: blockTag', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "blockTransactionCount",
         {

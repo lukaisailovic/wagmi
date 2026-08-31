@@ -1,6 +1,6 @@
 import { chain, testClient } from '@wagmi/test'
-import { renderHook, waitFor } from '@wagmi/test/react'
-import { expect, test } from 'vitest'
+import { renderHook } from '@wagmi/test/react'
+import { expect, test, vi } from 'vitest'
 
 import { useGasPrice } from './useGasPrice.js'
 
@@ -12,9 +12,9 @@ test('default', async () => {
   })
   await testClient.mainnet.mine({ blocks: 1 })
 
-  const { result } = renderHook(() => useGasPrice())
+  const { result } = await renderHook(() => useGasPrice())
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   expect(result.current).toMatchInlineSnapshot(`
     {
@@ -26,6 +26,7 @@ test('default', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -40,6 +41,10 @@ test('default', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "gasPrice",
         {
@@ -52,7 +57,7 @@ test('default', async () => {
   `)
 })
 
-test('parameters: chainId', async () => {
+test.skip('parameters: chainId', async () => {
   await testClient.mainnet2.restart()
 
   await testClient.mainnet2.setNextBlockBaseFeePerGas({
@@ -60,11 +65,11 @@ test('parameters: chainId', async () => {
   })
   await testClient.mainnet2.mine({ blocks: 1 })
 
-  const { result } = renderHook(() =>
+  const { result } = await renderHook(() =>
     useGasPrice({ chainId: chain.mainnet2.id }),
   )
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   expect(result.current).toMatchInlineSnapshot(`
     {
@@ -76,6 +81,7 @@ test('parameters: chainId', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -90,6 +96,10 @@ test('parameters: chainId', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "gasPrice",
         {

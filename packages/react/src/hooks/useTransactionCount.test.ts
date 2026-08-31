@@ -1,16 +1,16 @@
 import { accounts, chain, wait } from '@wagmi/test'
-import { renderHook, waitFor } from '@wagmi/test/react'
+import { renderHook } from '@wagmi/test/react'
 import type { Address } from 'viem'
-import { expect, test } from 'vitest'
+import { expect, test, vi } from 'vitest'
 
 import { useTransactionCount } from './useTransactionCount.js'
 
 const address = accounts[0]
 
 test('default', async () => {
-  const { result } = renderHook(() => useTransactionCount({ address }))
+  const { result } = await renderHook(() => useTransactionCount({ address }))
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   const { data, ...rest } = result.current
   expect(data).toBeTypeOf('number')
@@ -23,6 +23,7 @@ test('default', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -37,10 +38,14 @@ test('default', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "transactionCount",
         {
-          "address": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+          "address": "0x95132632579b073D12a6673e18Ab05777a6B86f8",
           "chainId": 1,
         },
       ],
@@ -51,11 +56,11 @@ test('default', async () => {
 })
 
 test('parameters: chainId', async () => {
-  const { result } = renderHook(() =>
+  const { result } = await renderHook(() =>
     useTransactionCount({ address, chainId: chain.mainnet2.id }),
   )
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   const { data, ...rest } = result.current
   expect(data).toBeTypeOf('number')
@@ -68,6 +73,7 @@ test('parameters: chainId', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -82,10 +88,14 @@ test('parameters: chainId', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "transactionCount",
         {
-          "address": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+          "address": "0x95132632579b073D12a6673e18Ab05777a6B86f8",
           "chainId": 456,
         },
       ],
@@ -96,11 +106,11 @@ test('parameters: chainId', async () => {
 })
 
 test('parameters: blockNumber', async () => {
-  const { result } = renderHook(() =>
+  const { result } = await renderHook(() =>
     useTransactionCount({ address, blockNumber: 13677382n }),
   )
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   const { data, ...rest } = result.current
   expect(data).toBeTypeOf('number')
@@ -113,6 +123,7 @@ test('parameters: blockNumber', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -127,10 +138,14 @@ test('parameters: blockNumber', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "transactionCount",
         {
-          "address": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+          "address": "0x95132632579b073D12a6673e18Ab05777a6B86f8",
           "blockNumber": 13677382n,
           "chainId": 1,
         },
@@ -142,9 +157,9 @@ test('parameters: blockNumber', async () => {
 })
 
 test('behavior: address: undefined -> defined', async () => {
-  let address: Address | undefined = undefined
+  let address: Address | undefined
 
-  const { result, rerender } = renderHook(() =>
+  const { result, rerender } = await renderHook(() =>
     useTransactionCount({ address }),
   )
 
@@ -160,6 +175,7 @@ test('behavior: address: undefined -> defined', async () => {
         "failureCount": 0,
         "failureReason": null,
         "fetchStatus": "idle",
+        "isEnabled": false,
         "isError": false,
         "isFetched": false,
         "isFetchedAfterMount": false,
@@ -174,6 +190,10 @@ test('behavior: address: undefined -> defined', async () => {
         "isRefetching": false,
         "isStale": false,
         "isSuccess": false,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
         "queryKey": [
           "transactionCount",
           {
@@ -190,7 +210,7 @@ test('behavior: address: undefined -> defined', async () => {
   address = accounts[0]
   rerender()
 
-  await waitFor(() => expect(result.current.isSuccess).toBeTruthy())
+  await vi.waitUntil(() => result.current.isSuccess, { timeout: 5_000 })
 
   const { data, ...rest } = result.current
   expect(data).toBeTypeOf('number')
@@ -203,6 +223,7 @@ test('behavior: address: undefined -> defined', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -217,10 +238,14 @@ test('behavior: address: undefined -> defined', async () => {
       "isRefetching": false,
       "isStale": true,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "transactionCount",
         {
-          "address": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+          "address": "0x95132632579b073D12a6673e18Ab05777a6B86f8",
           "chainId": 1,
         },
       ],
@@ -231,8 +256,8 @@ test('behavior: address: undefined -> defined', async () => {
 })
 
 test('behavior: disabled when properties missing', async () => {
-  const { result } = renderHook(() => useTransactionCount())
+  const { result } = await renderHook(() => useTransactionCount())
 
   await wait(100)
-  await waitFor(() => expect(result.current.isPending).toBeTruthy())
+  await vi.waitFor(() => expect(result.current.isPending).toBeTruthy())
 })

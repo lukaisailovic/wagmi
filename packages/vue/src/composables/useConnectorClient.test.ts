@@ -6,6 +6,7 @@ import { expect, test } from 'vitest'
 import { deepUnref } from '../utils/cloneDeep.js'
 import { useConnect } from './useConnect.js'
 import { useConnectorClient } from './useConnectorClient.js'
+import { useConnectors } from './useConnectors.js'
 import { useDisconnect } from './useDisconnect.js'
 import { useSwitchChain } from './useSwitchChain.js'
 
@@ -24,6 +25,7 @@ test('default', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": false,
       "isError": false,
       "isFetched": false,
       "isFetchedAfterMount": false,
@@ -38,11 +40,14 @@ test('default', async () => {
       "isRefetching": false,
       "isStale": false,
       "isSuccess": false,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "queryKey": [
         "connectorClient",
         {
           "chainId": 1,
-          "connectorUid": undefined,
         },
       ],
       "refetch": [Function],
@@ -75,6 +80,7 @@ test('behavior: connected on mount', async () => {
       "failureCount": 0,
       "failureReason": null,
       "fetchStatus": "idle",
+      "isEnabled": true,
       "isError": false,
       "isFetched": true,
       "isFetchedAfterMount": true,
@@ -89,6 +95,10 @@ test('behavior: connected on mount', async () => {
       "isRefetching": false,
       "isStale": false,
       "isSuccess": true,
+      "promise": Promise {
+        "reason": [Error: experimental_prefetchInRender feature flag is not enabled],
+        "status": "rejected",
+      },
       "refetch": [Function],
       "status": "success",
       "suspense": [Function],
@@ -100,18 +110,19 @@ test('behavior: connected on mount', async () => {
 
 test('behavior: connect and disconnect', async () => {
   const [connect] = renderComposable(() => useConnect())
+  const [connectors] = renderComposable(() => useConnectors())
   const [client] = renderComposable(() => useConnectorClient())
   const [disconnect] = renderComposable(() => useDisconnect())
 
   expect(client.data.value).not.toBeDefined()
 
-  connect.connect({
-    connector: connect.connectors[0]!,
+  connect.mutate({
+    connector: connectors.value[0]!,
   })
 
   await waitFor(client.data, (data) => data !== undefined)
 
-  disconnect.disconnect()
+  disconnect.mutate()
 
   await waitFor(client.data, (data) => data === undefined)
 })
@@ -123,17 +134,14 @@ test('behavior: switch chains', async () => {
   const [switchChain] = renderComposable(() => useSwitchChain())
 
   expect(connectorClient.data.value).not.toBeDefined()
-
   await waitFor(connectorClient.data, (data) => data !== undefined)
 
-  switchChain.switchChain({ chainId: 456 })
+  switchChain.mutate({ chainId: 456 })
   await waitFor(switchChain.isSuccess, (isSuccess) => isSuccess === true)
   await waitFor(connectorClient.data, (data) => data !== undefined)
   expect(connectorClient.data?.value?.chain.id).toEqual(456)
 
-  switchChain.switchChain({ chainId: 1 })
-  await waitFor(switchChain.isSuccess, (isSuccess) => isSuccess === true)
-  await waitFor(connectorClient.data, (data) => data !== undefined)
+  await switchChain.mutateAsync({ chainId: 1 })
   expect(connectorClient.data?.value?.chain.id).toEqual(1)
 
   await disconnect(config, { connector })

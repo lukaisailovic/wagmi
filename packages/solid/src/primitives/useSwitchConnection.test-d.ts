@@ -1,0 +1,103 @@
+import type {
+  Connector,
+  MutationFunctionContext,
+  SwitchConnectionErrorType,
+} from '@wagmi/core'
+import { config } from '@wagmi/test'
+import type { Address } from 'viem'
+import { expectTypeOf, test } from 'vitest'
+import { useSwitchConnection } from './useSwitchConnection.js'
+
+const connector = config.connectors[0]!
+const contextValue = { foo: 'bar' } as const
+
+test('context', () => {
+  const switchConnection = useSwitchConnection(() => ({
+    mutation: {
+      onMutate(variables, mutationContext) {
+        expectTypeOf(variables).toEqualTypeOf<{ connector: Connector }>()
+        expectTypeOf(mutationContext).toEqualTypeOf<MutationFunctionContext>()
+        return contextValue
+      },
+      onError(error, variables, context, mutationContext) {
+        expectTypeOf(variables).toEqualTypeOf<{ connector: Connector }>()
+        expectTypeOf(error).toEqualTypeOf<SwitchConnectionErrorType>()
+        expectTypeOf(context).toEqualTypeOf<typeof contextValue | undefined>()
+        expectTypeOf(mutationContext).toEqualTypeOf<MutationFunctionContext>()
+      },
+      onSuccess(data, variables, context, mutationContext) {
+        expectTypeOf(variables).toEqualTypeOf<{ connector: Connector }>()
+        expectTypeOf(data).toEqualTypeOf<{
+          accounts: readonly [Address, ...Address[]]
+          chainId: number
+        }>()
+        expectTypeOf(context).toEqualTypeOf<typeof contextValue>()
+        expectTypeOf(mutationContext).toEqualTypeOf<MutationFunctionContext>()
+      },
+      onSettled(data, error, variables, context, mutationContext) {
+        expectTypeOf(data).toEqualTypeOf<
+          | {
+              accounts: readonly [Address, ...Address[]]
+              chainId: number
+            }
+          | undefined
+        >()
+        expectTypeOf(error).toEqualTypeOf<SwitchConnectionErrorType | null>()
+        expectTypeOf(variables).toEqualTypeOf<{ connector: Connector }>()
+        expectTypeOf(context).toEqualTypeOf<typeof contextValue | undefined>()
+        expectTypeOf(mutationContext).toEqualTypeOf<MutationFunctionContext>()
+      },
+    },
+  }))
+
+  expectTypeOf(switchConnection.data).toEqualTypeOf<
+    | {
+        accounts: readonly [Address, ...Address[]]
+        chainId: number
+      }
+    | undefined
+  >()
+  expectTypeOf(
+    switchConnection.error,
+  ).toEqualTypeOf<SwitchConnectionErrorType | null>()
+  expectTypeOf(switchConnection.variables).toEqualTypeOf<
+    { connector: Connector } | undefined
+  >()
+  expectTypeOf(switchConnection.context).toEqualTypeOf<
+    typeof contextValue | undefined
+  >()
+
+  switchConnection.mutate(
+    { connector },
+    {
+      onError(error, variables, context, mutationContext) {
+        expectTypeOf(variables).toEqualTypeOf<{ connector: Connector }>()
+        expectTypeOf(error).toEqualTypeOf<SwitchConnectionErrorType>()
+        expectTypeOf(context).toEqualTypeOf<typeof contextValue | undefined>()
+        expectTypeOf(mutationContext).toEqualTypeOf<MutationFunctionContext>()
+      },
+      onSuccess(data, variables, context, mutationContext) {
+        expectTypeOf(variables).toEqualTypeOf<{ connector: Connector }>()
+        expectTypeOf(data).toEqualTypeOf<{
+          accounts: readonly [Address, ...Address[]]
+          chainId: number
+        }>()
+        expectTypeOf(context).toEqualTypeOf<typeof contextValue | undefined>()
+        expectTypeOf(mutationContext).toEqualTypeOf<MutationFunctionContext>()
+      },
+      onSettled(data, error, variables, context, mutationContext) {
+        expectTypeOf(data).toEqualTypeOf<
+          | {
+              accounts: readonly [Address, ...Address[]]
+              chainId: number
+            }
+          | undefined
+        >()
+        expectTypeOf(error).toEqualTypeOf<SwitchConnectionErrorType | null>()
+        expectTypeOf(variables).toEqualTypeOf<{ connector: Connector }>()
+        expectTypeOf(context).toEqualTypeOf<typeof contextValue | undefined>()
+        expectTypeOf(mutationContext).toEqualTypeOf<MutationFunctionContext>()
+      },
+    },
+  )
+})

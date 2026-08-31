@@ -1,4 +1,4 @@
-import type { SignMessageErrorType } from '@wagmi/core'
+import type { MutationFunctionContext, SignMessageErrorType } from '@wagmi/core'
 import type { SignMessageVariables } from '@wagmi/core/query'
 import { expectTypeOf, test } from 'vitest'
 
@@ -8,56 +8,69 @@ const message = 'hello world'
 const contextValue = { foo: 'bar' } as const
 
 test('context', () => {
-  const { context, data, error, signMessage, variables } = useSignMessage({
+  const signMessage = useSignMessage({
     mutation: {
-      onMutate(variables) {
+      onMutate(variables, mutationContext) {
         expectTypeOf(variables).toEqualTypeOf<SignMessageVariables>()
+        expectTypeOf(mutationContext).toEqualTypeOf<MutationFunctionContext>()
         return contextValue
       },
-      onError(error, variables, context) {
+      onError(error, variables, context, mutationContext) {
         expectTypeOf(variables).toEqualTypeOf<SignMessageVariables>()
         expectTypeOf(error).toEqualTypeOf<SignMessageErrorType>()
         expectTypeOf(context).toEqualTypeOf<typeof contextValue | undefined>()
+        expectTypeOf(mutationContext).toEqualTypeOf<MutationFunctionContext>()
       },
-      onSuccess(data, variables, context) {
+      onSuccess(data, variables, context, mutationContext) {
         expectTypeOf(variables).toEqualTypeOf<SignMessageVariables>()
         expectTypeOf(data).toEqualTypeOf<`0x${string}`>()
         expectTypeOf(context).toEqualTypeOf<typeof contextValue>()
+        expectTypeOf(mutationContext).toEqualTypeOf<MutationFunctionContext>()
       },
-      onSettled(data, error, variables, context) {
+      onSettled(data, error, variables, context, mutationContext) {
         expectTypeOf(data).toEqualTypeOf<`0x${string}` | undefined>()
         expectTypeOf(error).toEqualTypeOf<SignMessageErrorType | null>()
         expectTypeOf(variables).toEqualTypeOf<SignMessageVariables>()
         expectTypeOf(context).toEqualTypeOf<typeof contextValue | undefined>()
+        expectTypeOf(mutationContext).toEqualTypeOf<MutationFunctionContext>()
       },
     },
   })
 
-  expectTypeOf(data.value).toEqualTypeOf<`0x${string}` | undefined>()
-  expectTypeOf(error.value).toEqualTypeOf<SignMessageErrorType | null>()
-  expectTypeOf(variables.value).toEqualTypeOf<
+  expectTypeOf(signMessage.data.value).toEqualTypeOf<
+    `0x${string}` | undefined
+  >()
+  expectTypeOf(
+    signMessage.error.value,
+  ).toEqualTypeOf<SignMessageErrorType | null>()
+  expectTypeOf(signMessage.variables.value).toEqualTypeOf<
     SignMessageVariables | undefined
   >()
-  expectTypeOf(context.value).toEqualTypeOf<typeof contextValue | undefined>()
+  expectTypeOf(signMessage.context.value).toEqualTypeOf<
+    typeof contextValue | undefined
+  >()
 
-  signMessage(
+  signMessage.mutate(
     { message },
     {
-      onError(error, variables, context) {
+      onError(error, variables, context, mutationContext) {
         expectTypeOf(variables).toEqualTypeOf<SignMessageVariables>()
         expectTypeOf(error).toEqualTypeOf<SignMessageErrorType>()
         expectTypeOf(context).toEqualTypeOf<typeof contextValue | undefined>()
+        expectTypeOf(mutationContext).toEqualTypeOf<MutationFunctionContext>()
       },
-      onSuccess(data, variables, context) {
+      onSuccess(data, variables, context, mutationContext) {
         expectTypeOf(variables).toEqualTypeOf<SignMessageVariables>()
         expectTypeOf(data).toEqualTypeOf<`0x${string}`>()
-        expectTypeOf(context).toEqualTypeOf<typeof contextValue>()
+        expectTypeOf(context).toEqualTypeOf<typeof contextValue | undefined>()
+        expectTypeOf(mutationContext).toEqualTypeOf<MutationFunctionContext>()
       },
-      onSettled(data, error, variables, context) {
+      onSettled(data, error, variables, context, mutationContext) {
         expectTypeOf(data).toEqualTypeOf<`0x${string}` | undefined>()
         expectTypeOf(error).toEqualTypeOf<SignMessageErrorType | null>()
         expectTypeOf(variables).toEqualTypeOf<SignMessageVariables>()
         expectTypeOf(context).toEqualTypeOf<typeof contextValue | undefined>()
+        expectTypeOf(mutationContext).toEqualTypeOf<MutationFunctionContext>()
       },
     },
   )
